@@ -9,12 +9,14 @@ from package_managers.nuget_scanner import NugetScanner
 class OrganizationScanner(object):
     MANIFEST_FILES = {"*.csproj": NugetScanner,
                       "packages.config": NugetScanner,
+                      "build.gradle": MavenScanner,
+                      "build.gradle.kts": MavenScanner,
                       "*pom.xml": MavenScanner,
                       "composer.lock": PackagistScanner,
                       "composer.json": PackagistScanner,
                       "requirements.txt": PypiScanner,
                       "package-lock.json": NpmScanner,
-                      "package.json": NpmScanner}  # other dependencies confusion? like gradle?
+                      "package.json": NpmScanner}
 
     def __init__(self, organization_name="", exclude_repos=[]) -> None:
         self.exclude_repos = exclude_repos
@@ -28,7 +30,7 @@ class OrganizationScanner(object):
         for repository in self._get_organization_repositories():
             self.scan_repo(repository['full_name'])
 
-    def scan_repo(self, repository_name: str) -> None:  # what does this returns
+    def scan_repo(self, repository_name: str) -> None:
         print(f"scanning {repository_name}")
         for manifest_file_name in self.MANIFEST_FILES.keys():
             for manifest_file_path in self._get_file_paths(repository_name, manifest_file_name):

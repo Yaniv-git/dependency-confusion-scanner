@@ -35,10 +35,38 @@ class MavenScanner(object):
         return not bool(search(string))
 
     @staticmethod
-    def _parse_file(content: bytes) -> list:
+    def _parse_gradle_file(content: str) -> list:
+        result = []
+        # Regular expression to match dependencies
+        pattern = r"dependencies\s*{\s*([\s\S]*?)\s*}"
+        # Find the dependencies block
+        match = re.search(pattern, content)
+        if match:
+            # Extract the content inside the dependencies block
+            dependencies_content = match.group(1)
+            # Regular expression to match dependencies
+            dependency_pattern = "[\'\"]([\w\-.]+:[\w\-.]+:[\w\-.\$]+)"
+            # Find all dependencies in the content
+            dependencies = re.findall(dependency_pattern, dependencies_content)
+            for dependency in dependencies:
+                version = dependency.split(":")[-1] if "$" not in dependency.split(":")[-1] else None
+                result.append([dependency.split(":")[0].replace(".", "/"), dependency.split(":")[1], version])
+            no_version_dependency_pattern = "[\'\"]([\w\-.]+:[\w\-.]+)"
+            # Find all dependencies in the content
+            no_version_dependencies = re.findall(no_version_dependency_pattern, dependencies_content)
+            for dependency in no_version_dependencies:
+                result.append(
+                    [dependency.split(":")[0].replace(".", "/"), dependency.split(":")[1], None])
+            return result
+        else:
+            print("No dependencies block found in the Gradle file.")
+            return result
+
+    @staticmethod
+    def _parse_file(content: str) -> list:
         result = []
         properties_dict = {}
-        root = MavenScanner.remove_namespace(content.decode('utf-8'))
+        root = MavenScanner.remove_namespace(content)
         if root.find("dependencyManagement") is not None:
             root = root.find("dependencyManagement")
         for property in root.iter("properties"):
@@ -91,7 +119,10 @@ class MavenScanner(object):
     @staticmethod
     def scan_for_confusion(file_name: str, content: bytes) -> dict:
         results = {}
-        dependencies = MavenScanner._parse_file(content)
+        if "build.gradle" in file_name:
+            dependencies = MavenScanner._parse_gradle_file(content.decode('utf-8'))
+        else:
+            dependencies = MavenScanner._parse_file(content.decode('utf-8'))
         for group_id, artifact_id, version in dependencies:
             if not MavenScanner._package_exists(group_id, artifact_id, version):
                 results[group_id + "/" + artifact_id] = version

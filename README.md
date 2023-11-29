@@ -7,6 +7,7 @@ It scans for packages in:
   * packages.config
 * [Maven](https://mvnrepository.com/)
   * *pom.xml
+  * build.gradle
 * [Packagist](https://packagist.org/)
   * composer.lock
   * composer.json

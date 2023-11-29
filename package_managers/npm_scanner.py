@@ -22,19 +22,6 @@ class NpmScanner(object):
             if "999" in response_json['version'] or "9.9.9" in response_json['version']:
                 print(f"*** Potential exploited confusion in ---> {package_name} ***")
         return True
-        '''elif req.status_code == 200:
-            # Package found
-            depStr = req.text
-            if noTransitive:
-                continue
-            parsedDependencies = getPckgDependencies(depStr)
-            for dep in parsedDependencies:
-                # Do not put already processed packages back in queue
-                if dep not in lstVisitedDep:
-                    # print(f"Adding {dep}")
-                    queueDep.append(dep)
-                    lstVisitedDep[dep] = True
-                    resultObj["recursiveDependencies"].append(dep)'''
 
     @staticmethod
     def _parse_file(file_name: str, content: bytes) -> dict:
